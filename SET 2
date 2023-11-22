@@ -1,0 +1,174 @@
+**1**
+#include<stdio.h> 
+void findWaitingTime(int processes[], int n, int bt[], int wt[]) 
+{ 
+    wt[0] = 0; 
+    for (int  i = 1; i < n ; i++ ) 
+        wt[i] =  bt[i-1] + wt[i-1] ; 
+} 
+void findTurnAroundTime( int processes[], int n,  
+                  int bt[], int wt[], int tat[]) 
+{ 
+    for (int  i = 0; i < n ; i++) 
+        tat[i] = bt[i] + wt[i]; 
+} 
+void findavgTime( int processes[], int n, int bt[]) 
+{ 
+    int wt[n], tat[n], total_wt = 0, total_tat = 0; 
+    findWaitingTime(processes, n, bt, wt); 
+    findTurnAroundTime(processes, n, bt, wt, tat); 
+    printf("Processes   Burst time   Waiting time   Turn around time\n"); 
+    for (int  i=0; i<n; i++) 
+    { 
+        total_wt = total_wt + wt[i]; 
+        total_tat = total_tat + tat[i]; 
+        printf("       %d ",(i+1));
+        printf("       %d ", bt[i] );
+        printf("       %d",wt[i] );
+        printf("       %d\n",tat[i] ); 
+    } 
+    float s=(float)total_wt / (float)n;
+    float t=(float)total_tat / (float)n;
+    printf("Average waiting time = %f",s);
+    printf("\n");
+    printf("Average turn around time = %f ",t); 
+} 
+int main() 
+{ 
+    int processes[] = {1, 2, 3}; 
+    int n = sizeof processes / sizeof processes[0]; 
+    int  burst_time[] = {10, 5, 8}; 
+    findavgTime(processes, n,  burst_time); 
+    return 0; 
+} 
+
+**2**
+#include <stdio.h>
+#define MAX_PROCESSES 3
+#define MAX_RESOURCES 3
+int maxResources[MAX_PROCESSES][MAX_RESOURCES] = {
+    {3, 3, 3},
+    {4, 3, 3},
+    {3, 4, 4}
+};
+int allocatedResources[MAX_PROCESSES][MAX_RESOURCES] = {
+    {1, 2, 0},
+    {4, 3, 4},
+    {2, 0, 3}
+};
+int availableResources[MAX_RESOURCES] = {1, 2, 0};
+int finish[MAX_PROCESSES];
+int work[MAX_RESOURCES];
+int isDeadlocked() {
+    int i, j;
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        finish[i] = 0;
+    }
+    for (i = 0; i < MAX_RESOURCES; i++) {
+        work[i] = availableResources[i];
+    }
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (finish[i] == 0) {
+            int canRun = 1;
+            for (j = 0; j < MAX_RESOURCES; j++) {
+                if (maxResources[i][j] - allocatedResources[i][j] > work[j]) {
+                    canRun = 0;
+                    break;
+                }
+            }
+            if (canRun) {
+                finish[i] = 1;
+                for (j = 0; j < MAX_RESOURCES; j++) {
+                    work[j] += allocatedResources[i][j];
+                }
+                i = -1;
+            }
+        }
+    }
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (finish[i] == 0) {
+            return 1; 
+        }
+    }
+    return 0; 
+}
+int main() {
+    if (isDeadlocked()) {
+        printf("The system is in a deadlock state.\n");
+        printf("Deadlocked processes: ");
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (finish[i] == 0) {
+                printf("P%d ", i);
+            }
+        }
+        printf("\n");
+    } else {
+        printf("The system is not in a deadlock state.\n");
+    }
+    return 0;
+}
+
+**3**
+#include <stdio.h>
+#define MAX_FRAMES 3
+int main() {
+    int pageFrames[MAX_FRAMES];
+    int pageReference[] = {1, 2, 3, 2, 1, 5, 2, 1, 6, 2, 5, 6, 3, 1, 3, 6, 1, 2, 4, 3};
+    int n = sizeof(pageReference) / sizeof(pageReference[0]);
+    int pageFaults = 0;
+    int frameIndex = 0;
+    for (int i = 0; i < MAX_FRAMES; ++i) {
+        pageFrames[i] = -1;
+    }
+    for (int i = 0; i < n; ++i) {
+        int page = pageReference[i];
+        int pageFound = 0;
+        for (int j = 0; j < MAX_FRAMES; ++j) {
+            if (pageFrames[j] == page) {
+                pageFound = 1;
+                break;
+            }
+        }
+        if (!pageFound) {
+            pageFaults++;
+            pageFrames[frameIndex] = page;
+            frameIndex = (frameIndex + 1) % MAX_FRAMES;
+        }
+        printf("Page Frames: ");
+        for (int j = 0; j < MAX_FRAMES; ++j) {
+            if (pageFrames[j] == -1) {
+                printf("  ");
+            } else {
+                printf("%d ", pageFrames[j]);
+            }
+        }
+        printf("\n");
+    }
+    printf("Total Page Faults: %d\n", pageFaults);
+    return 0;
+}
+
+**4**
+#include <stdio.h>
+#include <stdlib.h>
+int calculateTotalHeadMovement(int tracks[], int n) {
+    int totalHeadMovement = 0;
+    for (int i = 1; i < n; i++) {
+        totalHeadMovement += abs(tracks[i] - tracks[i - 1]);
+    }
+    return totalHeadMovement;
+}
+int main() {
+    int n = 5;
+    int tracks[] = {55, 58, 60, 70, 18};
+    int totalHeadMovement = calculateTotalHeadMovement(tracks, n);
+    printf("Track Positions: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", tracks[i]);
+    }
+    printf("\n");
+    printf("Total Head Movement: %d\n", totalHeadMovement);
+    float averageHeadMovement = (float)totalHeadMovement / n;
+    printf("Average Head Movement: %.2f\n", averageHeadMovement);
+    return 0;
+}
