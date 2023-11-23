@@ -1,0 +1,112 @@
+**1**
+#include <stdio.h>
+int main() {
+    int total_blocks = 100;
+    printf("Contiguous Allocation:\n");
+    printf("Block added at the beginning: 1 disk operation\n");
+    printf("Block added in the middle: %d disk operations\n", total_blocks / 2);
+    printf("Block added at the end: 1 disk operation\n");
+    printf("\nLinked Allocation:\n");
+    printf("Block added at the beginning: 1 disk operation\n");
+    printf("Block added in the middle: %d disk operations\n", total_blocks / 2);
+    printf("Block added at the end: 1 disk operation\n");
+    printf("\nIndexed Allocation:\n");
+    printf("Block added at the beginning: 2 disk operations (read index block + write data block)\n");
+    printf("Block added in the middle: %d disk operations (read/write index block + write data block)\n", total_blocks / 2);
+    printf("Block added at the end: 2 disk operations (read index block + write data block)\n");
+    return 0;
+}
+
+**2**
+#include <stdio.h>
+struct Process {
+    int burstTime;
+    int priority;
+};
+void priorityScheduling(struct Process processes[], int n) {
+    int waitingTime[n];
+    int turnaroundTime[n];
+    waitingTime[0] = 0;
+    turnaroundTime[0] = processes[0].burstTime;
+    for (int i = 1; i < n; i++) {
+        waitingTime[i] = waitingTime[i - 1] + processes[i - 1].burstTime;
+        turnaroundTime[i] = waitingTime[i] + processes[i].burstTime;
+    }
+    double avgWaitTime = 0.0;
+    double avgTurnaroundTime = 0.0;
+    for (int i = 0; i < n; i++) {
+        avgWaitTime += waitingTime[i];
+        avgTurnaroundTime += turnaroundTime[i];
+    }
+    avgWaitTime /= n;
+    avgTurnaroundTime /= n;
+    printf("Process\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\t\t%d\t\t%d\n", i + 1, processes[i].burstTime, processes[i].priority,
+               waitingTime[i], turnaroundTime[i]);
+    }
+    printf("\nAverage Waiting Time: %.2lf\n", avgWaitTime);
+    printf("Average Turnaround Time: %.2lf\n", avgTurnaroundTime);
+}
+int main() {
+    struct Process processes[] = {{30, 2}, {12, 3}};
+    int n = sizeof(processes) / sizeof(processes[0]);
+    priorityScheduling(processes, n);
+    return 0;
+}
+
+**3**
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+sem_t semaphore;
+void* process(void* arg) {
+    sem_wait(&semaphore);
+    printf("Process %d is using the resource.\n", (int)arg);
+    sem_post(&semaphore);
+    pthread_exit(NULL);
+}
+int main() {
+    int numInstances = 4;
+    int numProcesses = 4;
+    sem_init(&semaphore, 0, numInstances);
+    pthread_t threads[numProcesses];
+    int processIDs[numProcesses];
+    for (int i = 0; i < numProcesses; ++i) {
+        processIDs[i] = i + 1;
+        pthread_create(&threads[i], NULL, process, &processIDs[i]);
+    }
+    for (int i = 0; i < numProcesses; ++i) {
+        pthread_join(threads[i], NULL);
+    }
+    sem_destroy(&semaphore);
+    return 0;
+}
+
+**4**
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+    FILE *file;
+    char data[100];
+    file = fopen("example.txt", "w");
+    if (file == NULL) {
+        printf("Error creating the file.\n");
+        return 1;
+    }
+    printf("Enter data to write to the file: ");
+    fgets(data, sizeof(data), stdin);
+    fprintf(file, "%s", data);
+    fclose(file);
+    file = fopen("example.txt", "r");
+    if (file == NULL) {
+        printf("Error opening the file for reading.\n");
+        return 1;
+    }
+    printf("\nData read from the file:\n");
+    while (fgets(data, sizeof(data), file) != NULL) {
+        printf("%s", data);
+    }
+    fclose(file);
+    return 0;
+}
