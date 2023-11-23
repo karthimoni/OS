@@ -1,0 +1,66 @@
+**1**
+#include <stdio.h>
+#define NUM_PARTITIONS 5
+void firstFit(int partitions[], int numPartitions, int processSize) {
+    int i;
+    for (i = 0; i < numPartitions; i++) {
+        if (partitions[i] >= processSize) {
+            // Allocate memory to the process
+            printf("Process of size %d KB allocated to partition %d\n", processSize, i + 1);
+            partitions[i] -= processSize;
+            break;
+        }
+    }
+    if (i == numPartitions) {
+printf("Unable to allocate memory for process of size %d KB\n", processSize);
+    }
+}
+void displayPartitions(int partitions[], int numPartitions) {
+    printf("Memory Partitions: ");
+    for (int i = 0; i < numPartitions; i++) {
+        printf("%d KB ", partitions[i]);
+    }
+    printf("\n");
+}
+int main() {
+    int partitions[NUM_PARTITIONS] = {40, 10, 30, 60, 0}; // Memory partitions in KB
+    int processes[] = {100, 50, 30, 120, 35};
+    int numProcesses = sizeof(processes) / sizeof(processes[0]);
+    printf("Initial State:\n");
+    displayPartitions(partitions, NUM_PARTITIONS);
+    for (int i = 0; i < numProcesses; i++) {
+        firstFit(partitions, NUM_PARTITIONS, processes[i]);
+        displayPartitions(partitions, NUM_PARTITIONS);
+    }
+    return 0;
+}
+
+**2**
+#include <stdio.h>
+#include <pthread.h>
+void *printEven(void *arg) {
+    for (int i = 2; i <= 10; i += 2) {
+        printf("Even: %d\n", i);
+    }
+    pthread_exit(NULL);
+}
+void *printOdd(void *arg) {
+    for (int i = 1; i <= 10; i += 2) {
+        printf("Odd: %d\n", i);
+    }
+    pthread_exit(NULL);
+}
+int main() {
+    pthread_t thread1, thread2;
+    if (pthread_create(&thread1, NULL, printEven, NULL) != 0) {
+        fprintf(stderr, "Error creating thread 1\n");
+        return 1;
+    }
+    if (pthread_create(&thread2, NULL, printOdd, NULL) != 0) {
+        fprintf(stderr, "Error creating thread 2\n");
+        return 1;
+    }
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+    return 0;
+}
