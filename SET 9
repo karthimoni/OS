@@ -1,0 +1,99 @@
+**1**
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+    int num_blocks = 9;
+    int blocks[] = {90, 150, 160, 184, 55, 58, 40, 70};
+    int head_position = 50;
+    int total_head_movement = 0;
+    printf("Average head movement: %d\n", total_head_movement / num_blocks);
+    return 0;
+}
+
+**3**
+#include <stdio.h>
+#include <stdlib.h>
+#define NUM_PARTITIONS 4
+void worstFit(int processes[], int numProcesses, int partitions[], int numPartitions) {
+    for (int i = 0; i < numProcesses; i++) {
+        int worstFitIdx = -1;
+        for (int j = 0; j < numPartitions; j++) {
+            if (processes[i] <= partitions[j]) {
+                if (worstFitIdx == -1 || partitions[j] > partitions[worstFitIdx]) {
+                    worstFitIdx = j;
+                }
+            }
+        }
+        if (worstFitIdx != -1) {
+            printf("Process %d allocated to Partition %d\n", processes[i], worstFitIdx + 1);
+            partitions[worstFitIdx] -= processes[i];
+        } else {
+            printf("Process %d cannot be allocated\n", processes[i]);
+        }
+    }
+}
+int main() {
+    int partitions[NUM_PARTITIONS] = {40, 10, 30, 60};
+    int processes[] = {100, 50, 30, 120, 35};
+    int numPartitions = NUM_PARTITIONS;
+    int numProcesses = sizeof(processes) / sizeof(processes[0]);
+    printf("Memory Partitions: ");
+    for (int i = 0; i < numPartitions; i++) {
+        printf("%d KB ", partitions[i]);
+    }
+    printf("\n");
+    printf("Processes: ");
+    for (int i = 0; i < numProcesses; i++) {
+        printf("%d KB ", processes[i]);
+    }
+    printf("\n");
+    worstFit(processes, numProcesses, partitions, numPartitions);
+    return 0;
+}
+
+**4**
+#include <stdio.h>
+#include <stdlib.h>
+#define TOTAL_BLOCKS 16
+#define BLOCK_SIZE 1024
+#define INODE_BLOCKS 8
+#define MIN_FILE_SIZE 1
+typedef struct {
+    int start_block;
+    int num_blocks;
+} Inode;
+int areContiguousBlocksFree(int start, int num_blocks, int *allocation_table) {
+    for (int i = start; i < start + num_blocks; i++) {
+        if (allocation_table[i] == 1) {
+            return 0; 
+        }
+    }
+    return 1; 
+}
+void allocateBlocks(int start, int num_blocks, int *allocation_table) {
+    for (int i = start; i < start + num_blocks; i++) {
+        allocation_table[i] = 1; // Mark blocks as allocated
+    }
+}
+int main() {
+    int allocation_table[TOTAL_BLOCKS] = {0}; 
+    for (int i = 0; i < INODE_BLOCKS; i++) {
+        allocation_table[i] = 1; // Mark inode blocks as allocated
+    }
+    Inode myFile;
+    myFile.num_blocks = 5; 
+    myFile.start_block = -1; 
+    for (int i = INODE_BLOCKS; i <= TOTAL_BLOCKS - myFile.num_blocks; i++) {
+        if (areContiguousBlocksFree(i, myFile.num_blocks, allocation_table)) {
+            myFile.start_block = i;
+            allocateBlocks(myFile.start_block, myFile.num_blocks, allocation_table);
+            break;
+        }
+    }
+    if (myFile.start_block == -1) {
+        printf("Error: Not enough contiguous blocks available for the file.\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("File Allocated: Blocks %d to %d\n", myFile.start_block, myFile.start_block + myFile.num_blocks - 1);
+    return 0;
+}
