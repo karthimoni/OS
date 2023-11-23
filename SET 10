@@ -1,0 +1,280 @@
+**1**
+#include <stdio.h>
+#define MAX_PROCESSES 4
+#define MAX_RESOURCES 3
+int available[MAX_RESOURCES] = {9, 3, 6};
+int maximum[MAX_PROCESSES][MAX_RESOURCES] = {
+    {1, 0, 0},
+    {3, 2, 2},
+    {4, 1, 4},
+    {4, 3, 2}
+};
+int allocation[MAX_PROCESSES][MAX_RESOURCES] = {
+    {0, 1, 0},
+    {2, 0, 0},
+    {3, 0, 2},
+    {2, 1, 1}
+};
+int need[MAX_PROCESSES][MAX_RESOURCES];
+void calculateNeedMatrix() {
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        for (int j = 0; j < MAX_RESOURCES; j++) {
+            need[i][j] = maximum[i][j] - allocation[i][j];
+        }
+    }
+}
+int isSafe() {
+    int work[MAX_RESOURCES];
+    int finish[MAX_PROCESSES];
+    for (int i = 0; i < MAX_RESOURCES; i++) {
+        work[i] = available[i];
+    }
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        finish[i] = 0;
+    }
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (finish[i] == 0) {
+            int canAllocate = 1;
+            for (int j = 0; j < MAX_RESOURCES; j++) {
+                if (need[i][j] > work[j]) {
+                    canAllocate = 0;
+                    break;
+                }
+            }
+            if (canAllocate) {
+                // Allocate resources and mark process as finished
+                for (int j = 0; j < MAX_RESOURCES; j++) {
+                    work[j] += allocation[i][j];
+                }
+                finish[i] = 1;
+                i = -1; // Start from the beginning
+            }
+        }
+    }
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (finish[i] == 0) {
+            return 0; // Unsafe state
+        }
+    }
+    return 1; 
+}
+int main() {
+    calculateNeedMatrix();
+    if (isSafe()) {
+        printf("System is in a safe state.\n");
+    } else {
+        printf("System is in an unsafe state.\n");
+    }
+    return 0;
+}
+
+**2**
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_FRAMES 3
+int isPagePresent(int page, int frames[], int numFrames) {
+    for (int i = 0; i < numFrames; i++) {
+        if (frames[i] == page) {
+            return 1; // Page is present
+        }
+    }
+    return 0; // Page is not present
+}
+int findFIFOIndex(int pages[], int numPages, int frames[], int numFrames, int currentIndex) {
+    int oldestIndex = currentIndex;
+    for (int i = 0; i < numFrames; i++) {
+        int j;
+        for (j = currentIndex - 1; j >= 0; j--) {
+            if (frames[i] == pages[j]) {
+                if (j < oldestIndex) {
+                    oldestIndex = j;
+                }
+                break;
+            }
+        }
+        if (j == -1) {
+            return i;
+        }
+    }
+    return oldestIndex % numFrames;
+}
+int simulateFIFO(int pages[], int numPages, int numFrames) {
+    int frames[MAX_FRAMES];
+    int pageFaults = 0;
+    for (int i = 0; i < numFrames; i++) {
+        frames[i] = -1; // Initialize frames as empty
+    }
+    for (int i = 0; i < numPages; i++) {
+        if (!isPagePresent(pages[i], frames, numFrames)) {
+            int replaceIndex = findFIFOIndex(pages, numPages, frames, numFrames, i);
+            frames[replaceIndex] = pages[i];
+            pageFaults++;
+        }
+        printf("Frames: ");
+        for (int j = 0; j < numFrames; j++) {
+            if (frames[j] == -1) {
+                printf(" - ");
+            } else {
+                printf(" %d ", frames[j]);
+            }
+        }
+        printf("\n");
+    }
+    return pageFaults;
+}
+int main() {
+    int pageReferenceSequence[] = {4, 1, 2, 4, 3, 2, 1, 5};
+    int numFrames = 3;
+    int numPages = sizeof(pageReferenceSequence) / sizeof(pageReferenceSequence[0]);
+    printf("Page Reference Sequence: ");
+    for (int i = 0; i < numPages; i++) {
+        printf("%d ", pageReferenceSequence[i]);
+    }
+    printf("\n");
+    int pageFaults = simulateFIFO(pageReferenceSequence, numPages, numFrames);
+    printf("Number of Page Faults: %d\n", pageFaults);
+    return 0;
+}
+
+**3**
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_TRACKS 100
+void sortArray(int arr[], int size) {
+    int temp;
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = i + 1; j < size; j++) {
+            if (arr[i] > arr[j]) {
+                // Swap elements
+                temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+}
+void simulateSCAN(int tracks[], int numTracks, int initialPosition) {
+    int direction = 1; // 1 for right, -1 for left
+    int currentPosition = initialPosition;
+    int totalHeadMovement = 0;
+    sortArray(tracks, numTracks);
+    printf("Head Movement: %d", currentPosition);
+    while (1) {
+        int nextTrack = -1;
+        for (int i = 0; i < numTracks; i++) {
+            if (tracks[i] * direction >= currentPosition * direction) {
+                nextTrack = tracks[i];
+                break;
+            }
+        }
+        if (nextTrack == -1) {
+            direction *= -1;
+            continue;
+        }
+        totalHeadMovement += abs(nextTrack - currentPosition);
+        currentPosition = nextTrack;
+        for (int i = 0; i < numTracks; i++) {
+            if (tracks[i] == currentPosition) {
+                for (int j = i; j < numTracks - 1; j++) {
+                    tracks[j] = tracks[j + 1];
+                }
+                numTracks--;
+                break;
+            }
+        }
+        printf(" -> %d", currentPosition);
+        if (numTracks == 0) {
+            break;
+        }
+    }
+    printf("\nTotal Head Movement: %d\n", totalHeadMovement);
+}
+int main() {
+    int tracks[] = {55, 58, 60, 70, 18, 90, 150, 160, 184};
+    int numTracks = sizeof(tracks) / sizeof(tracks[0]);
+    int initialPosition = 50; // Initial head position
+    printf("Initial Head Position: %d\n", initialPosition);
+    printf("Track Positions: ");
+    for (int i = 0; i < numTracks; i++) {
+        printf("%d ", tracks[i]);
+    }
+    printf("\n");
+    simulateSCAN(tracks, numTracks, initialPosition);
+    return 0;
+}
+
+**4**
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_FRAMES 3
+#define INFINITY 999999
+int isPagePresent(int page, int frames[], int numFrames) {
+    for (int i = 0; i < numFrames; i++) {
+        if (frames[i] == page) {
+            return 1; 
+        }
+    }
+    return 0; 
+}
+int findOptimalIndex(int pages[], int numPages, int frames[], int numFrames, int currentIndex) {
+    int farthestIndex = -1;
+    int farthestDistance = -1;
+    for (int i = 0; i < numFrames; i++) {
+        int j;
+        for (j = currentIndex + 1; j < numPages; j++) {
+            if (frames[i] == pages[j]) {
+                if (j > farthestDistance) {
+                    farthestDistance = j;
+                    farthestIndex = i;
+                }
+                break;
+            }
+        }
+        if (j == numPages) {
+            return i;
+        }
+    }
+    return farthestIndex;
+}
+int simulateOptimal(int pages[], int numPages, int numFrames) {
+    int frames[MAX_FRAMES];
+    int pageFaults = 0;
+    for (int i = 0; i < numFrames; i++) {
+        frames[i] = -1; // Initialize frames as empty
+    }
+    printf("Frames: ");
+    for (int i = 0; i < numFrames; i++) {
+        printf(" - ");
+    }
+    printf("\n");
+    for (int i = 0; i < numPages; i++) {
+        if (!isPagePresent(pages[i], frames, numFrames)) {
+            int replaceIndex = findOptimalIndex(pages, numPages, frames, numFrames, i);
+            frames[replaceIndex] = pages[i];
+            pageFaults++;
+        }
+        printf("Frames: ");
+        for (int j = 0; j < numFrames; j++) {
+            if (frames[j] == -1) {
+                printf(" - ");
+            } else {
+                printf(" %d ", frames[j]);
+            }
+        }
+        printf("\n");
+    }
+    return pageFaults;
+}
+int main() {
+    int pageReferenceSequence[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 0, 1, 7, 0, 1};
+    int numFrames = 3;
+    int numPages = sizeof(pageReferenceSequence) / sizeof(pageReferenceSequence[0]);
+    printf("Page Reference Sequence: ");
+    for (int i = 0; i < numPages; i++) {
+        printf("%d ", pageReferenceSequence[i]);
+    }
+    printf("\n");
+    int pageFaults = simulateOptimal(pageReferenceSequence, numPages, numFrames);
+    printf("Number of Page Faults: %d\n", pageFaults);
+    return 0;
+}
